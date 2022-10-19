@@ -1,0 +1,10 @@
+name: Github-actions
+on:
+  - push
+  - pull_request
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: make install
+      - run: make lint
