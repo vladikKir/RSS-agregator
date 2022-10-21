@@ -1,6 +1,14 @@
 import { object, string } from 'yup';
 import render from './view.js';
 import onChange from 'on-change';
+import i18next from 'i18next';
+import resources from './locales/index.js'
+
+i18next.init({
+	lng: 'ru',
+	debug: true,
+	resources
+})
 
 const validateUrl = (urlObj) => {
 	const urlSchema = object({
@@ -10,23 +18,22 @@ const validateUrl = (urlObj) => {
 };
 
 const state = {
-	isValid: null,
+	isValid: false,
 	currentUrl: '',
 	feedList: [],
-	error: ''
+	statusMessage: ''
 };
 
 const elements = {
 	input: document.querySelector('#url-input'),
+	statusMessage: document.querySelector('.feedback')
 };
 
-const watchedState = onChange(state, (path) => {
-	if(path === 'isValid') {
-		render(state, elements);
-	}
+const watchedState = onChange(state, () => {
+	render(state, elements, i18next);
 });
 
-const app = () => {
+const app = async () => {
 	const form = document.querySelector('form');
 	const input = form.querySelector('#url-input');
 	form.addEventListener('submit', (event) => {
@@ -36,12 +43,15 @@ const app = () => {
 			.then(() => {
 				state.currentUrl = inputUrl;
 				state.feedList.push(inputUrl);
-				watchedState.isValid = true;
+				state.isValid = true;
+				watchedState.statusMessage = true;
 			})
 			.catch((e) => {
+				const errorType = e.toString().split(': ')[1];
+				console.log(errorType)
 				state.currentUrl = inputUrl;
-				state.error = e;
-				watchedState.isValid = false;
+				state.isValid = false;
+				watchedState.statusMessage = errorType;
 			});
 	});
 };
