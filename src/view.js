@@ -1,16 +1,3 @@
-import onChange from 'on-change';
-
-const state = {
-	isValid: null,
-	currentUrl: '',
-	feedList: [],
-	error: ''
-};
-
-const elements = {
-	input: document.querySelector('#url-input'),
-};
-
 const render = (state, elements) => {
 	const input = elements.input;
 	input.classList.remove('is-invalid');
@@ -22,10 +9,4 @@ const render = (state, elements) => {
 	alert('rss загружен');
 };
 
-const watchedState = onChange(state, (path) => {
-	if(path === 'isValid') {
-		render(state, elements);
-	}
-});
-
-export default watchedState;
+export default render;

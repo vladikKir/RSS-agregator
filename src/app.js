@@ -1,5 +1,6 @@
 import { object, string } from 'yup';
-import state from './view.js';
+import render from './view.js';
+import onChange from 'on-change';
 
 const validateUrl = (urlObj) => {
 	const urlSchema = object({
@@ -7,6 +8,23 @@ const validateUrl = (urlObj) => {
 	});
 	return urlSchema.validate(urlObj);
 };
+
+const state = {
+	isValid: null,
+	currentUrl: '',
+	feedList: [],
+	error: ''
+};
+
+const elements = {
+	input: document.querySelector('#url-input'),
+};
+
+const watchedState = onChange(state, (path) => {
+	if(path === 'isValid') {
+		render(state, elements);
+	}
+});
 
 const app = () => {
 	const form = document.querySelector('form');
@@ -18,12 +36,12 @@ const app = () => {
 			.then(() => {
 				state.currentUrl = inputUrl;
 				state.feedList.push(inputUrl);
-				state.isValid = true;
+				watchedState.isValid = true;
 			})
 			.catch((e) => {
 				state.currentUrl = inputUrl;
 				state.error = e;
-				state.isValid = false;
+				watchedState.isValid = false;
 			});
 	});
 };
