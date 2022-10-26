@@ -1,4 +1,5 @@
 const createPosts = (state, elements, i18next) => {
+	elements.posts.innerHTML = '';
 	const postList = state.rss.posts;
 	if(postList.length === 0) {
 		return;
@@ -37,9 +38,42 @@ const createPosts = (state, elements, i18next) => {
 		button.textContent = i18next.t('posts.button');
 		list.append(post);
 	});
-	console.log(elements.posts);
 	elements.posts.append(posts);
 };
+
+const createFeeds = (state, elements, i18next) => {
+	elements.feeds.innerHTML = '';
+	const feedList = state.rss.feeds;
+	if(feedList.length === 0) {
+		return;
+	}
+	const feeds = document.createElement('div');
+	feeds.classList.add('card', 'border-0');
+	const cardBody = document.createElement('div');
+	feeds.append(cardBody);
+	cardBody.classList.add('card-body');
+	const header = document.createElement('h2');
+	cardBody.append(header);
+	header.classList.add('card-title', 'h4');
+	header.textContent = i18next.t('feeds.title');
+	const list = document.createElement('ul');
+	cardBody.append(list);
+	list.classList.add('list-group', 'border-0', 'rounded-0');
+	feedList.forEach((el) => {
+		const feed = document.createElement('li');
+		feed.classList.add('list-group-item', 'border-0', 'border-end-0');
+		const feedHeader = document.createElement('h3');
+		feed.append(feedHeader);
+		feedHeader.classList.add('h6', 'm-0');
+		feedHeader.textContent = el.title;
+		const description = document.createElement('p');
+		feed.append(description);
+		description.classList.add('m-0', 'small', 'text-black-50');
+		description.textContent = el.description;
+		list.append(feed);
+	});
+	elements.feeds.append(feeds);
+}
 
 const render = (state, elements, i18next) => {
 	const input = elements.input;
@@ -72,6 +106,7 @@ const render = (state, elements, i18next) => {
 		throw new Error('Unexpeted status message type');
 	}
 	createPosts(state, elements, i18next);
+	createFeeds(state, elements, i18next);
 };
 
 export default render;

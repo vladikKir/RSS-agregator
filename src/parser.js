@@ -15,7 +15,6 @@ const getInfo = (data) => {
 const parseRss = (rss) => {
 	const parse = new DOMParser();
 	const parsedData = parse.parseFromString(rss.data.contents, 'text/xml');
-	console.log(parsedData);
 	const feed = getInfo(parsedData);
 	const postElems = [...parsedData.querySelectorAll('item')];
 	const posts = postElems.map((post) => {

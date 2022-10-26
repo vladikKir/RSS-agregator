@@ -67,7 +67,6 @@ const app = async () => {
 					});
 			})
 			.catch((e) => {
-				console.log(`2 ${e}`);
 				const errorType = e.toString().split(': ')[1];
 				state.form.isValid = false;
 				watchedState.form.statusMessage = errorType;
