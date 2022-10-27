@@ -29,6 +29,15 @@ const createPosts = (state, elements, i18next) => {
 		a.setAttribute('rel', 'noreffer');
 		a.textContent = el.title;
 		const button = document.createElement('button');
+		button.addEventListener('click', () => {
+			const modalWindow = document.querySelector('.modal-content');
+			const title = modalWindow.querySelector('.modal-title');
+			const body = modalWindow.querySelector('.modal-body');
+			const readFullArticle = modalWindow.querySelector('.full-article');
+			title.textContent = el.title;
+			body.textContent = el.description;
+			readFullArticle.href = el.link;
+		})
 		post.append(button);
 		button.setAttribute('type', 'button');
 		button.classList.add('btn', 'btn-outline-primary', 'btn-sm');
