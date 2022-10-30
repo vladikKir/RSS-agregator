@@ -1,6 +1,59 @@
-const createPosts = (state, elements, i18next) => {
-	elements.posts.innerHTML = '';
-	const postList = state.rss.posts;
+import i18next from 'i18next';
+import resources from './locales/index.js';
+import onChange from 'on-change';
+
+const elements = {
+	input: document.querySelector('#url-input'),
+	statusMessage: document.querySelector('.feedback'),
+	posts: document.querySelector('.posts'),
+	feeds: document.querySelector('.feeds')
+};
+
+i18next.init({
+	lng: 'ru',
+	debug: true,
+	resources
+});
+
+const makeInputStyle = (input, value) => {
+    switch (value) {
+        case false:
+            input.classList.add('is-invalid');
+            break;
+        case true:
+			input.classList.remove('is-invalid')
+            break;
+        default:
+            throw new Error(`${value} is an unexpected input status`);
+    }
+};
+
+const makeStatusMessageStyle = (statusMessage, value) => {
+	statusMessage.classList.remove('text-danger', 'text-danger');
+    switch (value) {
+        case true:
+            statusMessage.classList.add('text-success');
+            statusMessage.textContent = i18next.t('rssStatusMessage.success');
+            break;
+        case 'url must be a valid URL':
+            statusMessage.classList.add('text-danger');
+            statusMessage.textContent = i18next.t('rssStatusMessage.notUrl');
+            break;
+        case 'url must not be one of the following values':
+            statusMessage.classList.add('text-danger');
+            statusMessage.textContent = i18next.t('rssStatusMessage.alreadyExists');
+            break;
+        case 'no available RSS':
+            statusMessage.classList.add('text-danger');
+            statusMessage.textContent = i18next.t('rssStatusMessage.noAvailableRss');
+            break;
+        default:
+            throw new Error('Unexpeted status message type');
+    }
+};
+
+const makePosts = (postsEl, postList) => {
+	postsEl.innerHTML = '';
 	if(postList.length === 0) {
 		return;
 	}
@@ -37,7 +90,7 @@ const createPosts = (state, elements, i18next) => {
 			title.textContent = el.title;
 			body.textContent = el.description;
 			readFullArticle.href = el.link;
-		})
+		});
 		post.append(button);
 		button.setAttribute('type', 'button');
 		button.classList.add('btn', 'btn-outline-primary', 'btn-sm');
@@ -47,12 +100,11 @@ const createPosts = (state, elements, i18next) => {
 		button.textContent = i18next.t('posts.button');
 		list.append(post);
 	});
-	elements.posts.append(posts);
+	postsEl.append(posts);
 };
 
-const createFeeds = (state, elements, i18next) => {
-	elements.feeds.innerHTML = '';
-	const feedList = state.rss.feeds;
+const makeFeeds = (feedsEl, feedList) => {
+	feedsEl.innerHTML = '';
 	if(feedList.length === 0) {
 		return;
 	}
@@ -81,41 +133,24 @@ const createFeeds = (state, elements, i18next) => {
 		description.textContent = el.description;
 		list.append(feed);
 	});
-	elements.feeds.append(feeds);
-}
-
-const render = (state, elements, i18next) => {
-	const input = elements.input;
-	const statusMessage = elements.statusMessage;
-	input.classList.remove('is-invalid');
-	statusMessage.classList.remove('text-danger');
-	if (state.form.isValid === false) {
-		input.classList.add('is-invalid');
-	} else {
-		input.value = '';
-	}
-	switch (state.form.statusMessage) {
-	case true:
-		statusMessage.classList.add('text-success');
-		statusMessage.textContent = i18next.t('rssStatusMessage.success');
-		break;
-	case 'inputUrl must be a valid URL':
-		statusMessage.classList.add('text-danger');
-		statusMessage.textContent = i18next.t('rssStatusMessage.notUrl');
-		break;
-	case 'inputUrl must not be one of the following values':
-		statusMessage.classList.add('text-danger');
-		statusMessage.textContent = i18next.t('rssStatusMessage.alreadyExists');
-		break;
-	case 'No available RSS':
-		statusMessage.classList.add('text-danger');
-		statusMessage.textContent = i18next.t('rssStatusMessage.noAvailableRss');
-		break;
-	default:
-		throw new Error('Unexpeted status message type');
-	}
-	createPosts(state, elements, i18next);
-	createFeeds(state, elements, i18next);
+	feedsEl.append(feeds);
 };
 
-export default render;
+export default (state) => {
+    return onChange(state, (path, value) => {
+        switch (path) {
+            case 'form.isValid':
+                makeInputStyle(elements.input, value);
+                break;
+            case 'form.statusMessage':
+                makeStatusMessageStyle(elements.statusMessage, value);
+                break;
+            case 'rss.feeds':
+                makeFeeds(elements.feeds, value);
+                break;
+            case 'rss.posts':
+                makePosts(elements.posts, value);
+				break;
+        }
+    })
+};
