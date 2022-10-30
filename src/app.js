@@ -33,12 +33,12 @@ const checkForUpdates = () => {
 					return;
 				}
 				newPosts.push(...result.value.posts);
-			})
+			});
 			state.rss.posts = newPosts;
 		})
 		.then(() => {
-			setTimeout(checkForUpdates, TIME_STEP)
-		})
+			setTimeout(checkForUpdates, TIME_STEP);
+		});
 };
 
 const updateRss = () => {
@@ -79,7 +79,7 @@ const app = () => {
 			.catch(() => {
 				state.form.isValid = false;
 				state.form.statusMessage = 'no available RSS';
-			})
+			});
 	});
 	checkForUpdates();
 };

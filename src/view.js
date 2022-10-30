@@ -16,40 +16,40 @@ i18next.init({
 });
 
 const makeInputStyle = (input, value) => {
-    switch (value) {
-        case false:
-            input.classList.add('is-invalid');
-            break;
-        case true:
-			input.classList.remove('is-invalid')
-            break;
-        default:
-            throw new Error(`${value} is an unexpected input status`);
-    }
+	switch (value) {
+	case false:
+		input.classList.add('is-invalid');
+		break;
+	case true:
+		input.classList.remove('is-invalid');
+		break;
+	default:
+		throw new Error(`${value} is an unexpected input status`);
+	}
 };
 
 const makeStatusMessageStyle = (statusMessage, value) => {
 	statusMessage.classList.remove('text-danger', 'text-danger');
-    switch (value) {
-        case true:
-            statusMessage.classList.add('text-success');
-            statusMessage.textContent = i18next.t('rssStatusMessage.success');
-            break;
-        case 'url must be a valid URL':
-            statusMessage.classList.add('text-danger');
-            statusMessage.textContent = i18next.t('rssStatusMessage.notUrl');
-            break;
-        case 'url must not be one of the following values':
-            statusMessage.classList.add('text-danger');
-            statusMessage.textContent = i18next.t('rssStatusMessage.alreadyExists');
-            break;
-        case 'no available RSS':
-            statusMessage.classList.add('text-danger');
-            statusMessage.textContent = i18next.t('rssStatusMessage.noAvailableRss');
-            break;
-        default:
-            throw new Error('Unexpeted status message type');
-    }
+	switch (value) {
+	case true:
+		statusMessage.classList.add('text-success');
+		statusMessage.textContent = i18next.t('rssStatusMessage.success');
+		break;
+	case 'url must be a valid URL':
+		statusMessage.classList.add('text-danger');
+		statusMessage.textContent = i18next.t('rssStatusMessage.notUrl');
+		break;
+	case 'url must not be one of the following values':
+		statusMessage.classList.add('text-danger');
+		statusMessage.textContent = i18next.t('rssStatusMessage.alreadyExists');
+		break;
+	case 'no available RSS':
+		statusMessage.classList.add('text-danger');
+		statusMessage.textContent = i18next.t('rssStatusMessage.noAvailableRss');
+		break;
+	default:
+		throw new Error('Unexpeted status message type');
+	}
 };
 
 const makePosts = (postsEl, postList) => {
@@ -143,20 +143,20 @@ const makeFeeds = (feedsEl, feedList) => {
 };
 
 export default (state) => {
-    return onChange(state, (path, value) => {
-        switch (path) {
-            case 'form.isValid':
-                makeInputStyle(elements.input, value);
-                break;
-            case 'form.statusMessage':
-                makeStatusMessageStyle(elements.statusMessage, value);
-                break;
-            case 'rss.feeds':
-                makeFeeds(elements.feeds, value);
-                break;
-            case 'rss.posts':
-                makePosts(elements.posts, value);
-				break;
-        }
-    })
+	return onChange(state, (path, value) => {
+		switch (path) {
+		case 'form.isValid':
+			makeInputStyle(elements.input, value);
+			break;
+		case 'form.statusMessage':
+			makeStatusMessageStyle(elements.statusMessage, value);
+			break;
+		case 'rss.feeds':
+			makeFeeds(elements.feeds, value);
+			break;
+		case 'rss.posts':
+			makePosts(elements.posts, value);
+			break;
+		}
+	});
 };
