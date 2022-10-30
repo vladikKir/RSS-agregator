@@ -12,7 +12,7 @@ const state = watchState({
 		feeds: [],
 		posts: []
 	},
-	rssList: []
+	rssList: [],
 });
 
 const validateUrl = (urlObj) => {

@@ -71,16 +71,22 @@ const makePosts = (postsEl, postList) => {
 	list.classList.add('list-group', 'border-0', 'rounded-0');
 	postList.forEach((el) => {
 		const post = document.createElement('li');
-		post.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
+		post.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0',);
 		const a = document.createElement('a');
 		post.append(a);
 		a.href = el.link;
+		a.classList.add(el.readed);
 		a.setAttribute('target', '_blank');
-		a.classList.add('fw-bold');
 		a.setAttribute('data-id', el.id);
 		a.setAttribute('rel', 'noopener');
 		a.setAttribute('rel', 'noreffer');
 		a.textContent = el.title;
+		a.addEventListener('click', () => {
+			a.classList.remove(el.readed);
+			el.readed = 'fw-normal';
+			a.classList.add(el.readed);
+		});
+
 		const button = document.createElement('button');
 		button.addEventListener('click', () => {
 			const modalWindow = document.querySelector('.modal-content');
