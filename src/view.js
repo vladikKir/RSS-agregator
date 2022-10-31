@@ -18,20 +18,20 @@ i18next.init({
 const makeInputStyle = (input, value) => {
 	input.removeAttribute('readonly');
 	switch (value) {
-		case false:
-			input.classList.add('is-invalid');
-			break;
-		case true:
-			input.classList.remove('is-invalid');
-			input.value = '';
-			break;
-		case 'checking':
-			input.setAttribute('readonly', 'true');
-			input.classList.remove('is-invalid');
-			break;
-		default:
-			throw new Error(`${value} is an unexpected input status`);
-		}
+	case false:
+		input.classList.add('is-invalid');
+		break;
+	case true:
+		input.classList.remove('is-invalid');
+		input.value = '';
+		break;
+	case 'checking':
+		input.setAttribute('readonly', 'true');
+		input.classList.remove('is-invalid');
+		break;
+	default:
+		throw new Error(`${value} is an unexpected input status`);
+	}
 };
 
 const makeStatusMessageStyle = (statusMessage, value) => {

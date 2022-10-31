@@ -93,8 +93,8 @@ const app = () => {
 					state.form.statusMessage = 'no available RSS';
 					return;
 				}
-				state.form.statusMessage = e.toString().split(': ')[1];;
-			})
+				state.form.statusMessage = e.toString().split(': ')[1];
+			});
 	});
 	checkForUpdates();
 };
