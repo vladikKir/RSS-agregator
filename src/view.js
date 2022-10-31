@@ -1,67 +1,67 @@
 import i18next from 'i18next';
-import resources from './locales/index.js';
 import onChange from 'on-change';
+import resources from './locales/index.js';
 
 const elements = {
   input: document.querySelector('#url-input'),
   statusMessage: document.querySelector('.feedback'),
   posts: document.querySelector('.posts'),
-  feeds: document.querySelector('.feeds')
+  feeds: document.querySelector('.feeds'),
 };
 
 i18next.init({
   lng: 'ru',
   debug: true,
-  resources
+  resources,
 });
 
 const makeInputStyle = (input, value) => {
   input.removeAttribute('readonly');
   switch (value) {
-  case false:
-    input.classList.add('is-invalid');
-    break;
-  case true:
-    input.classList.remove('is-invalid');
-    input.value = '';
-    break;
-  case 'checking':
-    input.setAttribute('readonly', 'true');
-    input.classList.remove('is-invalid');
-    break;
-  default:
-    throw new Error(`${value} is an unexpected input status`);
+    case false:
+      input.classList.add('is-invalid');
+      break;
+    case true:
+      input.classList.remove('is-invalid');
+      input.value = '';
+      break;
+    case 'checking':
+      input.setAttribute('readonly', 'true');
+      input.classList.remove('is-invalid');
+      break;
+    default:
+      throw new Error(`${value} is an unexpected input status`);
   }
 };
 
 const makeStatusMessageStyle = (statusMessage, value) => {
   statusMessage.classList.remove('text-danger');
   switch (value) {
-  case 'adding':
-    statusMessage.textContent = '';
-    break;
-  case 'added':
-    statusMessage.classList.add('text-success');
-    statusMessage.textContent = i18next.t('rssStatusMessage.success');
-    break;
-  case 'url must be a valid URL':
-    statusMessage.classList.add('text-danger');
-    statusMessage.textContent = i18next.t('rssStatusMessage.notUrl');
-    break;
-  case 'url must not be one of the following values':
-    statusMessage.classList.add('text-danger');
-    statusMessage.textContent = i18next.t('rssStatusMessage.alreadyExists');
-    break;
-  case 'no available RSS':
-    statusMessage.classList.add('text-danger');
-    statusMessage.textContent = i18next.t('rssStatusMessage.noAvailableRss');
-    break;
-  case 'network error':
-    statusMessage.classList.add('text-danger');
-    statusMessage.textContent = i18next.t('rssStatusMessage.networkError');
-    break;
-  default:
-    throw new Error('Unexpeted status message type');
+    case 'adding':
+      statusMessage.textContent = '';
+      break;
+    case 'added':
+      statusMessage.classList.add('text-success');
+      statusMessage.textContent = i18next.t('rssStatusMessage.success');
+      break;
+    case 'url':
+      statusMessage.classList.add('text-danger');
+      statusMessage.textContent = i18next.t('rssStatusMessage.notUrl');
+      break;
+    case 'notOneOf':
+      statusMessage.classList.add('text-danger');
+      statusMessage.textContent = i18next.t('rssStatusMessage.alreadyExists');
+      break;
+    case 'no available RSS':
+      statusMessage.classList.add('text-danger');
+      statusMessage.textContent = i18next.t('rssStatusMessage.noAvailableRss');
+      break;
+    case 'network error':
+      statusMessage.classList.add('text-danger');
+      statusMessage.textContent = i18next.t('rssStatusMessage.networkError');
+      break;
+    default:
+      throw new Error('Unexpeted status message type');
   }
 };
 
@@ -95,14 +95,14 @@ const buttonClickListener = (a, el) => {
 
 const makePosts = (postsEl, postList) => {
   postsEl.innerHTML = '';
-  if(postList.length === 0) {
+  if (postList.length === 0) {
     return;
   }
   const posts = makeContainer('posts');
   const list = posts.querySelector('ul');
   postList.forEach((el) => {
     const post = document.createElement('li');
-    post.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0',);
+    post.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
     const a = document.createElement('a');
     post.append(a);
     a.href = el.link;
@@ -132,7 +132,7 @@ const makePosts = (postsEl, postList) => {
 
 const makeFeeds = (feedsEl, feedList) => {
   feedsEl.innerHTML = '';
-  if(feedList.length === 0) {
+  if (feedList.length === 0) {
     return;
   }
   const feeds = makeContainer('feeds');
@@ -153,9 +153,8 @@ const makeFeeds = (feedsEl, feedList) => {
   feedsEl.append(feeds);
 };
 
-export default (state) => {
-  return onChange(state, (path, value) => {
-    switch (path) {
+export default (state) => onChange(state, (path, value) => {
+  switch (path) {
     case 'form.isValid':
       makeInputStyle(elements.input, value);
       break;
@@ -168,6 +167,7 @@ export default (state) => {
     case 'rss.posts':
       makePosts(elements.posts, value);
       break;
-    }
-  });
-};
+    default:
+      break;
+  }
+});

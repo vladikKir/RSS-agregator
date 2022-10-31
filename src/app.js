@@ -1,6 +1,6 @@
 import { object, string } from 'yup';
-import watchState from './view.js';
 import axios from 'axios';
+import watchState from './view.js';
 import parseRss from './parser.js';
 
 const state = watchState({
@@ -10,34 +10,28 @@ const state = watchState({
   },
   rss: {
     feeds: [],
-    posts: []
+    posts: [],
   },
   rssList: [],
 });
 
 const validateUrl = (urlObj) => {
   const urlSchema = object({
-    url: string().url().notOneOf(state.rssList)
+    url: string().url().notOneOf(state.rssList),
   });
   return urlSchema.validate(urlObj);
 };
 
 const getUpdatedRss = () => {
   const list = state.rssList;
-  return list.map((rss) => {
-    return axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(rss)}`)
-      .then((response) => {
-        return parseRss(response);
-      });
-  });
+  return list.map((rss) => axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(rss)}`)
+    .then((response) => parseRss(response)));
 };
 
 const updatePosts = (posts) => {
-  const titles = state.rss.posts.map((post) => {
-    return post.title;
-  });
+  const titles = state.rss.posts.map((post) => post.title);
   posts.forEach((post) => {
-    const title = post.title;
+    const { title } = post;
     if (!titles.includes(title)) {
       state.rss.posts.unshift(post);
     }
@@ -73,9 +67,7 @@ const app = () => {
         state.form.isValid = 'checking';
         return axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`);
       })
-      .then((response) => {
-        return parseRss(response);
-      })
+      .then((response) => parseRss(response))
       .then(({ feed, posts }) => {
         state.form.isValid = true;
         state.form.statusMessage = 'added';
@@ -93,7 +85,7 @@ const app = () => {
           state.form.statusMessage = 'no available RSS';
           return;
         }
-        state.form.statusMessage = e.toString().split(': ')[1];
+        state.form.statusMessage = e.type;
       });
   });
   checkForUpdates();

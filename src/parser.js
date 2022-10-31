@@ -6,8 +6,9 @@ const getDocumentInfo = (data) => {
   const description = data.querySelector('description').textContent;
   const link = data.querySelector('link').textContent;
   const readed = 'fw-bold';
-  return { title, description, link, id, readed };
-	
+  return {
+    title, description, link, id, readed,
+  };
 };
 
 const parseRss = (rss) => {
@@ -16,9 +17,7 @@ const parseRss = (rss) => {
     const parsedData = parse.parseFromString(rss.data.contents, 'text/xml');
     const feed = getDocumentInfo(parsedData);
     const postElems = [...parsedData.querySelectorAll('item')];
-    const posts = postElems.map((post) => {
-      return getDocumentInfo(post);
-    });
+    const posts = postElems.map((post) => getDocumentInfo(post));
     return { feed, posts };
   } catch {
     throw new Error('parsing error');
