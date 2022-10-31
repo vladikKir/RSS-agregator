@@ -22,26 +22,7 @@ const validateUrl = (urlObj) => {
 	return urlSchema.validate(urlObj);
 };
 
-const checkForUpdates = () => {
-	const TIME_STEP = 5000;
-	const promises = updateRss();
-	Promise.allSettled(promises)
-		.then((results) => {
-			const newPosts = [];
-			results.forEach((result) => {
-				if (result.status !== 'fulfilled') {
-					return;
-				}
-				newPosts.push(...result.value.posts);
-			});
-			state.rss.posts = newPosts;
-		})
-		.then(() => {
-			setTimeout(checkForUpdates, TIME_STEP);
-		});
-};
-
-const updateRss = () => {
+const getUpdatedRss = () => {
 	const list = state.rssList;
 	return list.map((rss) => {
 		return axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(rss)}`)
@@ -49,6 +30,35 @@ const updateRss = () => {
 				return parseRss(response);
 			});
 	});
+};
+
+const updatePosts = (posts) => {
+	const titles = state.rss.posts.map((post) => {
+		return post.title;
+	});
+	posts.forEach((post) => {
+		const title = post.title;
+		if (!titles.includes(title)) {
+			state.rss.posts.unshift(post);
+		}
+	});
+};
+
+const checkForUpdates = () => {
+	const TIME_STEP = 5000;
+	const promises = getUpdatedRss();
+	Promise.allSettled(promises)
+		.then((results) => {
+			results.forEach((result) => {
+				if (result.status !== 'fulfilled') {
+					return;
+				}
+				updatePosts(result.value.posts);
+			});
+		})
+		.then(() => {
+			setTimeout(checkForUpdates, TIME_STEP);
+		});
 };
 
 const app = () => {

@@ -52,51 +52,59 @@ const makeStatusMessageStyle = (statusMessage, value) => {
 	}
 };
 
+const makeContainer = (type) => {
+	const container = document.createElement('div');
+	container.classList.add('card', 'border-0');
+	const cardBody = document.createElement('div');
+	container.append(cardBody);
+	cardBody.classList.add('card-body');
+	const header = document.createElement('h2');
+	cardBody.append(header);
+	header.classList.add('card-title', 'h4');
+	header.textContent = type === 'feed' ? i18next.t('feeds.title') : i18next.t('posts.title');
+	const list = document.createElement('ul');
+	cardBody.append(list);
+	list.classList.add('list-group', 'border-0', 'rounded-0');
+	return container;
+};
+
+const buttonClickListener = (a, el) => {
+	const modalWindow = document.querySelector('.modal-content');
+	const title = modalWindow.querySelector('.modal-title');
+	const body = modalWindow.querySelector('.modal-body');
+	const readFullArticle = modalWindow.querySelector('.full-article');
+	title.textContent = el.title;
+	body.textContent = el.description;
+	readFullArticle.href = el.link;
+	a.classList.remove('fw-bold');
+	a.classList.add('fw-normal', 'link-secondary');
+};
+
 const makePosts = (postsEl, postList) => {
 	postsEl.innerHTML = '';
 	if(postList.length === 0) {
 		return;
 	}
-	const posts = document.createElement('div');
-	posts.classList.add('card', 'border-0');
-	const cardBody = document.createElement('div');
-	posts.append(cardBody);
-	cardBody.classList.add('card-body');
-	const header = document.createElement('h2');
-	cardBody.append(header);
-	header.classList.add('card-title', 'h4');
-	header.textContent = i18next.t('posts.title');
-	const list = document.createElement('ul');
-	cardBody.append(list);
-	list.classList.add('list-group', 'border-0', 'rounded-0');
+	const posts = makeContainer('posts');
+	const list = posts.querySelector('ul');
 	postList.forEach((el) => {
 		const post = document.createElement('li');
 		post.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0',);
 		const a = document.createElement('a');
 		post.append(a);
 		a.href = el.link;
-		a.classList.add(el.readed);
+		a.classList.add('fw-bold');
 		a.setAttribute('target', '_blank');
 		a.setAttribute('data-id', el.id);
 		a.setAttribute('rel', 'noopener');
 		a.setAttribute('rel', 'noreffer');
 		a.textContent = el.title;
 		a.addEventListener('click', () => {
-			a.classList.remove(el.readed);
-			el.readed = 'fw-normal';
-			a.classList.add(el.readed);
+			a.classList.remove('fw-bold');
+			a.classList.add('fw-normal', 'link-secondary');
 		});
-
 		const button = document.createElement('button');
-		button.addEventListener('click', () => {
-			const modalWindow = document.querySelector('.modal-content');
-			const title = modalWindow.querySelector('.modal-title');
-			const body = modalWindow.querySelector('.modal-body');
-			const readFullArticle = modalWindow.querySelector('.full-article');
-			title.textContent = el.title;
-			body.textContent = el.description;
-			readFullArticle.href = el.link;
-		});
+		button.addEventListener('click', () => buttonClickListener(a, el));
 		post.append(button);
 		button.setAttribute('type', 'button');
 		button.classList.add('btn', 'btn-outline-primary', 'btn-sm');
@@ -114,18 +122,8 @@ const makeFeeds = (feedsEl, feedList) => {
 	if(feedList.length === 0) {
 		return;
 	}
-	const feeds = document.createElement('div');
-	feeds.classList.add('card', 'border-0');
-	const cardBody = document.createElement('div');
-	feeds.append(cardBody);
-	cardBody.classList.add('card-body');
-	const header = document.createElement('h2');
-	cardBody.append(header);
-	header.classList.add('card-title', 'h4');
-	header.textContent = i18next.t('feeds.title');
-	const list = document.createElement('ul');
-	cardBody.append(list);
-	list.classList.add('list-group', 'border-0', 'rounded-0');
+	const feeds = makeContainer('feeds');
+	const list = feeds.querySelector('ul');
 	feedList.forEach((el) => {
 		const feed = document.createElement('li');
 		feed.classList.add('list-group-item', 'border-0', 'border-end-0');

@@ -1,6 +1,6 @@
 import _ from 'lodash';
 
-const getInfo = (data) => {
+const getDocumentInfo = (data) => {
 	try {
 		const id = _.uniqueId();
 		const title = data.querySelector('title').textContent;
@@ -14,15 +14,19 @@ const getInfo = (data) => {
 };
 
 const parseRss = (rss) => {
-	const parse = new DOMParser();
-	const parsedData = parse.parseFromString(rss.data.contents, 'text/xml');
-	const feed = getInfo(parsedData);
-	const postElems = [...parsedData.querySelectorAll('item')];
-	const posts = postElems.map((post) => {
-		return getInfo(post);
-	});
+	try {
+		const parse = new DOMParser();
+		const parsedData = parse.parseFromString(rss.data.contents, 'text/xml');
+		const feed = getDocumentInfo(parsedData);
+		const postElems = [...parsedData.querySelectorAll('item')];
+		const posts = postElems.map((post) => {
+			return getDocumentInfo(post);
+		});
 
-	return { feed, posts };
+		return { feed, posts };
+	} catch {
+		throw new Error(`Error parsing ${rss}`);
+	}
 };
 
 export default parseRss;
