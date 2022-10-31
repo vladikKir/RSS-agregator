@@ -5,7 +5,7 @@ import parseRss from './parser.js';
 
 const state = watchState({
 	form: {
-		isValid: false,
+		isValid: '',
 		statusMessage: '',
 	},
 	rss: {
@@ -69,6 +69,8 @@ const app = () => {
 		const url = input.value;
 		validateUrl({ url })
 			.then(() => {
+				state.form.statusMessage = 'adding';
+				state.form.isValid = 'checking';
 				return axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`);
 			})
 			.then((response) => {
@@ -76,20 +78,23 @@ const app = () => {
 			})
 			.then(({ feed, posts }) => {
 				state.form.isValid = true;
-				state.form.statusMessage = true;
+				state.form.statusMessage = 'added';
 				state.rssList.push(url);
 				state.rss.feeds.push(feed);
 				state.rss.posts.push(...posts);
 			})
 			.catch((e) => {
-				const errorType = e.toString().split(': ')[1];
 				state.form.isValid = false;
-				state.form.statusMessage = errorType;
+				if (e.name === 'AxiosError') {
+					state.form.statusMessage = 'network error';
+					return;
+				}
+				if (e.message === 'parsing error') {
+					state.form.statusMessage = 'no available RSS';
+					return;
+				}
+				state.form.statusMessage = e.toString().split(': ')[1];;
 			})
-			.catch(() => {
-				state.form.isValid = false;
-				state.form.statusMessage = 'no available RSS';
-			});
 	});
 	checkForUpdates();
 };

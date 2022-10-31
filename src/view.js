@@ -16,23 +16,31 @@ i18next.init({
 });
 
 const makeInputStyle = (input, value) => {
+	input.removeAttribute('readonly');
 	switch (value) {
-	case false:
-		input.classList.add('is-invalid');
-		break;
-	case true:
-		input.classList.remove('is-invalid');
-		input.value = '';
-		break;
-	default:
-		throw new Error(`${value} is an unexpected input status`);
-	}
+		case false:
+			input.classList.add('is-invalid');
+			break;
+		case true:
+			input.classList.remove('is-invalid');
+			input.value = '';
+			break;
+		case 'checking':
+			input.setAttribute('readonly', 'true');
+			input.classList.remove('is-invalid');
+			break;
+		default:
+			throw new Error(`${value} is an unexpected input status`);
+		}
 };
 
 const makeStatusMessageStyle = (statusMessage, value) => {
-	statusMessage.classList.remove('text-danger', 'text-danger');
+	statusMessage.classList.remove('text-danger');
 	switch (value) {
-	case true:
+	case 'adding':
+		statusMessage.textContent = '';
+		break;
+	case 'added':
 		statusMessage.classList.add('text-success');
 		statusMessage.textContent = i18next.t('rssStatusMessage.success');
 		break;
@@ -47,6 +55,10 @@ const makeStatusMessageStyle = (statusMessage, value) => {
 	case 'no available RSS':
 		statusMessage.classList.add('text-danger');
 		statusMessage.textContent = i18next.t('rssStatusMessage.noAvailableRss');
+		break;
+	case 'network error':
+		statusMessage.classList.add('text-danger');
+		statusMessage.textContent = i18next.t('rssStatusMessage.networkError');
 		break;
 	default:
 		throw new Error('Unexpeted status message type');
