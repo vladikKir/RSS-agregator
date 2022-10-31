@@ -22,6 +22,7 @@ const makeInputStyle = (input, value) => {
 		break;
 	case true:
 		input.classList.remove('is-invalid');
+		input.value = '';
 		break;
 	default:
 		throw new Error(`${value} is an unexpected input status`);
