@@ -7,6 +7,7 @@ const elements = {
   statusMessage: document.querySelector('.feedback'),
   posts: document.querySelector('.posts'),
   feeds: document.querySelector('.feeds'),
+  modal: document.getElementById('modal'),
 };
 
 i18next.init({
@@ -18,10 +19,10 @@ i18next.init({
 const makeInputStyle = (input, value) => {
   input.removeAttribute('readonly');
   switch (value) {
-    case false:
+    case 'invalid':
       input.classList.add('is-invalid');
       break;
-    case true:
+    case 'valid':
       input.classList.remove('is-invalid');
       input.value = '';
       break;
@@ -52,11 +53,11 @@ const makeStatusMessageStyle = (statusMessage, value) => {
       statusMessage.classList.add('text-danger');
       statusMessage.textContent = i18next.t('rssStatusMessage.alreadyExists');
       break;
-    case 'no available RSS':
+    case 'noAvailableRSS':
       statusMessage.classList.add('text-danger');
-      statusMessage.textContent = i18next.t('rssStatusMessage.noAvailableRss');
+      statusMessage.textContent = i18next.t('rssStatusMessage.invalidRss');
       break;
-    case 'network error':
+    case 'networkError':
       statusMessage.classList.add('text-danger');
       statusMessage.textContent = i18next.t('rssStatusMessage.networkError');
       break;
@@ -79,18 +80,6 @@ const makeContainer = (type) => {
   cardBody.append(list);
   list.classList.add('list-group', 'border-0', 'rounded-0');
   return container;
-};
-
-const buttonClickListener = (a, el) => {
-  const modalWindow = document.querySelector('.modal-content');
-  const title = modalWindow.querySelector('.modal-title');
-  const body = modalWindow.querySelector('.modal-body');
-  const readFullArticle = modalWindow.querySelector('.full-article');
-  title.textContent = el.title;
-  body.textContent = el.description;
-  readFullArticle.href = el.link;
-  a.classList.remove('fw-bold');
-  a.classList.add('fw-normal', 'link-secondary');
 };
 
 const makePosts = (postsEl, postList) => {
@@ -117,7 +106,6 @@ const makePosts = (postsEl, postList) => {
       a.classList.add('fw-normal', 'link-secondary');
     });
     const button = document.createElement('button');
-    button.addEventListener('click', () => buttonClickListener(a, el));
     post.append(button);
     button.setAttribute('type', 'button');
     button.classList.add('btn', 'btn-outline-primary', 'btn-sm');
@@ -125,7 +113,7 @@ const makePosts = (postsEl, postList) => {
     button.setAttribute('data-bs-toggle', 'modal');
     button.setAttribute('data-bs-target', '#modal');
     button.textContent = i18next.t('posts.button');
-    list.append(post);
+    list.prepend(post);
   });
   postsEl.append(posts);
 };
@@ -153,9 +141,21 @@ const makeFeeds = (feedsEl, feedList) => {
   feedsEl.append(feeds);
 };
 
+const makeModalWindow = (modalEl, modalState) => {
+  const title = modalEl.querySelector('.modal-title');
+  const body = modalEl.querySelector('.modal-body');
+  const readFullArticle = modalEl.querySelector('.full-article');
+  title.textContent = modalState.title;
+  body.textContent = modalState.description;
+  readFullArticle.href = modalState.link;
+  const a = document.querySelector(`a[data-id="${modalState.id}"]`);
+  a.classList.remove('fw-bold');
+  a.classList.add('fw-normal', 'link-secondary');
+};
+
 export default (state) => onChange(state, (path, value) => {
   switch (path) {
-    case 'form.isValid':
+    case 'form.validationStatus':
       makeInputStyle(elements.input, value);
       break;
     case 'form.statusMessage':
@@ -166,6 +166,9 @@ export default (state) => onChange(state, (path, value) => {
       break;
     case 'rss.posts':
       makePosts(elements.posts, value);
+      break;
+    case 'modal':
+      makeModalWindow(elements.modal, value);
       break;
     default:
       break;
