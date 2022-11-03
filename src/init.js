@@ -74,6 +74,13 @@ const checkForUpdates = () => {
 };
 
 export default () => {
+  const newInstance = i18next.createInstance();
+  newInstance.init({
+    lng: 'ru',
+    debug: true,
+    resources,
+  });
+
   const modal = document.getElementById('modal');
   modal.addEventListener('show.bs.modal', modalEventListener);
   const form = document.querySelector('form');
@@ -81,13 +88,7 @@ export default () => {
   form.addEventListener('submit', (event) => {
     event.preventDefault();
     const url = input.value;
-    const newInstance = i18next.createInstance();
-    newInstance.init({
-      lng: 'ru',
-      debug: true,
-      resources,
-    })
-      .then(() => validateUrl({ url }))
+    validateUrl({ url })
       .then(() => {
         watchedState.form.statusMessage = 'adding';
         watchedState.form.validationStatus = 'checking';
