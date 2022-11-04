@@ -1,6 +1,4 @@
-import i18next from 'i18next';
 import onChange from 'on-change';
-import resources from './locales/index.js';
 
 const elements = {
   input: document.querySelector('#url-input'),
@@ -9,12 +7,6 @@ const elements = {
   feeds: document.querySelector('.feeds'),
   modal: document.getElementById('modal'),
 };
-
-i18next.init({
-  lng: 'ru',
-  debug: true,
-  resources,
-});
 
 const makeInputStyle = (input, value) => {
   input.removeAttribute('readonly');
@@ -35,7 +27,7 @@ const makeInputStyle = (input, value) => {
   }
 };
 
-const makeStatusMessageStyle = (statusMessage, value) => {
+const makeStatusMessageStyle = (statusMessage, i18next, value) => {
   statusMessage.classList.remove('text-danger');
   switch (value) {
     case 'adding':
@@ -66,7 +58,7 @@ const makeStatusMessageStyle = (statusMessage, value) => {
   }
 };
 
-const makeContainer = (type) => {
+const makeContainer = (type, i18next) => {
   const container = document.createElement('div');
   container.classList.add('card', 'border-0');
   const cardBody = document.createElement('div');
@@ -75,19 +67,19 @@ const makeContainer = (type) => {
   const header = document.createElement('h2');
   cardBody.append(header);
   header.classList.add('card-title', 'h4');
-  header.textContent = type === 'feed' ? i18next.t('feeds.title') : i18next.t('posts.title');
+  header.textContent = type === 'feeds' ? i18next.t('feeds.title') : i18next.t('posts.title');
   const list = document.createElement('ul');
   cardBody.append(list);
   list.classList.add('list-group', 'border-0', 'rounded-0');
   return container;
 };
 
-const makePosts = (postsEl, postList) => {
+const makePosts = (postsEl, i18next, postList) => {
   postsEl.innerHTML = '';
   if (postList.length === 0) {
     return;
   }
-  const posts = makeContainer('posts');
+  const posts = makeContainer('posts', i18next);
   const list = posts.querySelector('ul');
   postList.forEach((el) => {
     const post = document.createElement('li');
@@ -113,17 +105,17 @@ const makePosts = (postsEl, postList) => {
     button.setAttribute('data-bs-toggle', 'modal');
     button.setAttribute('data-bs-target', '#modal');
     button.textContent = i18next.t('posts.button');
-    list.prepend(post);
+    list.append(post);
   });
   postsEl.append(posts);
 };
 
-const makeFeeds = (feedsEl, feedList) => {
+const makeFeeds = (feedsEl, i18next, feedList) => {
   feedsEl.innerHTML = '';
   if (feedList.length === 0) {
     return;
   }
-  const feeds = makeContainer('feeds');
+  const feeds = makeContainer('feeds', i18next);
   const list = feeds.querySelector('ul');
   feedList.forEach((el) => {
     const feed = document.createElement('li');
@@ -153,19 +145,17 @@ const makeModalWindow = (modalEl, modalState) => {
   a.classList.add('fw-normal', 'link-secondary');
 };
 
-export default (state) => onChange(state, (path, value) => {
+export default (state, i18next) => onChange(state, (path, value) => {
   switch (path) {
-    case 'form.validationStatus':
-      makeInputStyle(elements.input, value);
-      break;
-    case 'form.statusMessage':
-      makeStatusMessageStyle(elements.statusMessage, value);
+    case 'form':
+      makeInputStyle(elements.input, value.validationStatus);
+      makeStatusMessageStyle(elements.statusMessage, i18next, value.statusMessage);
       break;
     case 'rss.feeds':
-      makeFeeds(elements.feeds, value);
+      makeFeeds(elements.feeds, i18next, value);
       break;
     case 'rss.posts':
-      makePosts(elements.posts, value);
+      makePosts(elements.posts, i18next, value);
       break;
     case 'modal':
       makeModalWindow(elements.modal, value);

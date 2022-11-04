@@ -18,7 +18,8 @@ const state = {
   modal: {},
 };
 
-const watchedState = watchState(state);
+const newInstance = i18next.createInstance();
+const watchedState = watchState(state, newInstance);
 
 const modalEventListener = (e) => {
   const button = e.relatedTarget;
@@ -74,13 +75,6 @@ const checkForUpdates = () => {
 };
 
 export default () => {
-  const newInstance = i18next.createInstance();
-  newInstance.init({
-    lng: 'ru',
-    debug: true,
-    resources,
-  });
-
   const modal = document.getElementById('modal');
   modal.addEventListener('show.bs.modal', modalEventListener);
   const form = document.querySelector('form');
@@ -88,31 +82,33 @@ export default () => {
   form.addEventListener('submit', (event) => {
     event.preventDefault();
     const url = input.value;
-    validateUrl({ url })
+    newInstance.init({
+      lng: 'ru',
+      debug: true,
+      resources,
+    })
+    .then(() => validateUrl({ url }))
       .then(() => {
-        watchedState.form.statusMessage = 'adding';
-        watchedState.form.validationStatus = 'checking';
+        watchedState.form = { validationStatus: 'checking', statusMessage: 'adding' }
         return axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`);
       })
       .then((response) => parseRss(response.data.contents))
       .then(({ feed, posts }) => {
-        watchedState.form.validationStatus = 'valid';
-        watchedState.form.statusMessage = 'added';
+        watchedState.form = { validationStatus: 'valid', statusMessage: 'added' }
         watchedState.rssList.push(url);
         watchedState.rss.feeds.push(feed);
         watchedState.rss.posts.push(...posts);
       })
       .catch((e) => {
-        watchedState.form.validationStatus = 'invalid';
+        let statusMessage;
         if (e.name === 'AxiosError') {
-          watchedState.form.statusMessage = 'networkError';
-          return;
+          statusMessage = 'networkError';
+        } else if (e.message === 'parsing error') {
+          statusMessage = 'noAvailableRSS';
+        } else {
+          statusMessage = e.type;
         }
-        if (e.message === 'parsing error') {
-          watchedState.form.statusMessage = 'noAvailableRSS';
-          return;
-        }
-        watchedState.form.statusMessage = e.type;
+        watchedState.form = { validationStatus: 'invalid', statusMessage }
       });
   });
   checkForUpdates();
