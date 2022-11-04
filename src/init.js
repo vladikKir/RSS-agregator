@@ -87,14 +87,14 @@ export default () => {
       debug: true,
       resources,
     })
-    .then(() => validateUrl({ url }))
+      .then(() => validateUrl({ url }))
       .then(() => {
-        watchedState.form = { validationStatus: 'checking', statusMessage: 'adding' }
+        watchedState.form = { validationStatus: 'checking', statusMessage: 'adding' };
         return axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`);
       })
       .then((response) => parseRss(response.data.contents))
       .then(({ feed, posts }) => {
-        watchedState.form = { validationStatus: 'valid', statusMessage: 'added' }
+        watchedState.form = { validationStatus: 'valid', statusMessage: 'added' };
         watchedState.rssList.push(url);
         watchedState.rss.feeds.push(feed);
         watchedState.rss.posts.push(...posts);
@@ -108,9 +108,8 @@ export default () => {
         } else {
           statusMessage = e.type;
         }
-        watchedState.form = { validationStatus: 'invalid', statusMessage }
+        watchedState.form = { validationStatus: 'invalid', statusMessage };
       });
   });
-  
   checkForUpdates();
 };
