@@ -111,5 +111,6 @@ export default () => {
         watchedState.form = { validationStatus: 'invalid', statusMessage }
       });
   });
+  
   checkForUpdates();
 };
