@@ -1,4 +1,4 @@
-import { object, string } from 'yup';
+import { string } from 'yup';
 import axios from 'axios';
 import i18next from 'i18next';
 import resources from './locales/index.js';
@@ -24,21 +24,16 @@ const watchedState = watchState(state, newInstance);
 const modalEventListener = (e) => {
   const button = e.relatedTarget;
   const buttonId = button.dataset.id;
-  const [currentPost] = [...watchedState.rss.posts.filter((post) => post.id === buttonId)];
-  const { title } = currentPost;
-  const { description } = currentPost;
-  const { link } = currentPost;
-  const { id } = currentPost;
+  const currentPost = watchedState.rss.posts.find((post) => post.id === buttonId);
+  const { title, description, link, id } = currentPost;
   watchedState.modal = {
     title, description, link, id,
   };
 };
 
-const validateUrl = (urlObj) => {
-  const urlSchema = object({
-    url: string().url().notOneOf(watchedState.rssList),
-  });
-  return urlSchema.validate(urlObj);
+const validateUrl = (url) => {
+  const urlSchema = string().url().notOneOf(watchedState.rssList)
+  return urlSchema.validate(url);
 };
 
 const getUpdatedRss = () => {
@@ -63,10 +58,9 @@ const checkForUpdates = () => {
   Promise.allSettled(promises)
     .then((results) => {
       results.forEach((result) => {
-        if (result.status !== 'fulfilled') {
-          return;
+        if (result.status === 'fulfilled') {
+          updatePosts(result.value.posts);
         }
-        updatePosts(result.value.posts);
       });
     })
     .then(() => {
@@ -79,37 +73,38 @@ export default () => {
   modal.addEventListener('show.bs.modal', modalEventListener);
   const form = document.querySelector('form');
   const input = form.querySelector('#url-input');
-  form.addEventListener('submit', (event) => {
-    event.preventDefault();
-    const url = input.value;
-    newInstance.init({
-      lng: 'ru',
-      debug: true,
-      resources,
-    })
-      .then(() => validateUrl({ url }))
-      .then(() => {
-        watchedState.form = { validationStatus: 'checking', statusMessage: 'adding' };
-        return axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`);
-      })
-      .then((response) => parseRss(response.data.contents))
-      .then(({ feed, posts }) => {
-        watchedState.form = { validationStatus: 'valid', statusMessage: 'added' };
-        watchedState.rssList.push(url);
-        watchedState.rss.feeds.push(feed);
-        watchedState.rss.posts.push(...posts);
-      })
-      .catch((e) => {
-        let statusMessage;
-        if (e.name === 'AxiosError') {
-          statusMessage = 'networkError';
-        } else if (e.message === 'parsing error') {
-          statusMessage = 'noAvailableRSS';
-        } else {
-          statusMessage = e.type;
-        }
-        watchedState.form = { validationStatus: 'invalid', statusMessage };
-      });
-  });
+  newInstance.init({
+    lng: 'ru',
+    debug: true,
+    resources,
+  }).then(() => {
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const url = input.value;
+      validateUrl(url)
+        .then(() => {
+          watchedState.form = { validationStatus: 'checking', statusMessage: 'adding' };
+          return axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`);
+        })
+        .then((response) => parseRss(response.data.contents, i18next))
+        .then(({ feed, posts }) => {
+          watchedState.form = { validationStatus: 'valid', statusMessage: 'added' };
+          watchedState.rssList.push(url);
+          watchedState.rss.feeds.push(feed);
+          watchedState.rss.posts.push(...posts);
+        })
+        .catch((e) => {
+          let statusMessage;
+          if (e.name === 'AxiosError') {
+            statusMessage = 'networkError';
+          } else if (e.message === i18next.parseRss) {
+            statusMessage = 'noAvailableRSS';
+          } else {
+            statusMessage = e.type;
+          }
+          watchedState.form = { validationStatus: 'invalid', statusMessage };
+        });
+    });
+  })
   checkForUpdates();
 };

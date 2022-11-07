@@ -7,6 +7,7 @@ export default {
       invalidRss: 'Ресурс не содержит валидный RSS',
       networkError: 'Ошибка сети',
     },
+    parseError: 'Ошибка при парсинге страницы',
     posts: {
       title: 'Посты',
       button: 'Просмотр',

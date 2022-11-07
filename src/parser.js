@@ -10,7 +10,7 @@ const getDocumentInfo = (data) => {
   };
 };
 
-const parseRss = (content) => {
+const parseRss = (content, i18next) => {
   try {
     const parse = new DOMParser();
     const parsedData = parse.parseFromString(content, 'text/xml');
@@ -19,7 +19,7 @@ const parseRss = (content) => {
     const posts = postElems.map((post) => getDocumentInfo(post));
     return { feed, posts };
   } catch {
-    throw new Error('parsing error');
+    throw new Error(i18next.parseError);
   }
 };
 
