@@ -100,7 +100,7 @@ export default () => {
           watchedState.form = { validationStatus: 'checking', statusMessage: 'adding' };
           return axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`);
         })
-        .then((response) => parseRss(response.data.contents, i18next))
+        .then((response) => parseRss(response.data.contents, newInstance.t('parseError')))
         .then(({ feed, posts }) => {
           watchedState.form = { validationStatus: 'valid', statusMessage: 'added' };
           watchedState.rssList.push(url);
@@ -111,7 +111,7 @@ export default () => {
           let statusMessage;
           if (e.name === 'AxiosError') {
             statusMessage = 'networkError';
-          } else if (e.message === i18next.parseRss) {
+          } else if (e.message === newInstance.t('parseError')) {
             statusMessage = 'noAvailableRSS';
           } else {
             statusMessage = e.type;
