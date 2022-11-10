@@ -1,13 +1,5 @@
 import onChange from 'on-change';
 
-const elements = {
-  input: document.querySelector('#url-input'),
-  statusMessage: document.querySelector('.feedback'),
-  posts: document.querySelector('.posts'),
-  feeds: document.querySelector('.feeds'),
-  modal: document.getElementById('modal'),
-};
-
 const makeInputStyle = (input, value) => {
   input.removeAttribute('readonly');
   switch (value) {
@@ -145,7 +137,7 @@ const makeModalWindow = (modalEl, modalState) => {
   a.classList.add('fw-normal', 'link-secondary');
 };
 
-export default (state, i18next) => onChange(state, (path, value) => {
+export default (state, i18next, elements) => onChange(state, (path, value) => {
   switch (path) {
     case 'form':
       makeInputStyle(elements.input, value.validationStatus);
