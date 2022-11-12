@@ -2,8 +2,8 @@ export default {
   translation: {
     rssStatusMessage: {
       success: 'RSS успешно загружен',
-      notUrl: 'Ссылка должна быть валидным URL',
-      alreadyExists: 'RSS уже существует',
+      url: 'Ссылка должна быть валидным URL',
+      notOneOf: 'RSS уже существует',
       invalidRss: 'Ресурс не содержит валидный RSS',
       networkError: 'Ошибка сети',
     },

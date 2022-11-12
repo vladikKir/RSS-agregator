@@ -14,6 +14,7 @@ export default () => {
     rss: {
       feeds: [],
       posts: [],
+      seenPosts: [],
     },
     rssList: [],
     modal: {},
@@ -28,8 +29,19 @@ export default () => {
     modal: document.getElementById('modal'),
   };
 
-  const newInstance = i18next.createInstance();
-  const watchedState = watchState(state, newInstance, elements);
+  const i18nextInstanse = i18next.createInstance();
+  const watchedState = watchState(state, i18nextInstanse, elements);
+
+  const TIME_STEP = 5000;
+
+  const postsEventListener = (e) => {
+    const targetPost = e.target;
+    if (targetPost.tagName !== 'A') {
+      return;
+    }
+    const targetPostId = targetPost.dataset.id;
+    watchedState.rss.seenPosts.push(targetPostId);
+  };
 
   const modalEventListener = (e) => {
     const button = e.relatedTarget;
@@ -41,6 +53,7 @@ export default () => {
     watchedState.modal = {
       title, description, link, id,
     };
+    watchState.rss.seenPosts.push(id);
   };
 
   const validateUrl = (url) => {
@@ -56,16 +69,17 @@ export default () => {
 
   const updatePosts = (posts) => {
     const titles = watchedState.rss.posts.map((post) => post.title);
+    const postsToUpdate = [];
     posts.forEach((post) => {
       const { title } = post;
       if (!titles.includes(title)) {
-        watchedState.rss.posts.push(post);
+        postsToUpdate.push(post);
       }
     });
+    watchedState.rss.posts.push(...postsToUpdate);
   };
 
   const checkForUpdates = () => {
-    const TIME_STEP = 5000;
     const promises = getUpdatedRss();
     Promise.allSettled(promises)
       .then((results) => {
@@ -82,12 +96,11 @@ export default () => {
       });
   };
 
-  const { modal } = elements;
+  const { modal, form, input } = elements;
+  window.addEventListener('click', postsEventListener);
   modal.addEventListener('show.bs.modal', modalEventListener);
-  const { form } = elements;
-  const { input } = elements;
 
-  newInstance.init({
+  i18nextInstanse.init({
     lng: 'ru',
     debug: true,
     resources,
@@ -100,9 +113,10 @@ export default () => {
           watchedState.form = { validationStatus: 'checking', statusMessage: 'adding' };
           return axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`);
         })
-        .then((response) => parseRss(response.data.contents, newInstance.t('parseError')))
+        .then((response) => parseRss(response.data.contents, i18nextInstanse
+          .t('parseError')))
         .then(({ feed, posts }) => {
-          watchedState.form = { validationStatus: 'valid', statusMessage: 'added' };
+          watchedState.form = { validationStatus: 'valid', statusMessage: 'success' };
           watchedState.rssList.push(url);
           watchedState.rss.feeds.push(feed);
           watchedState.rss.posts.push(...posts);
@@ -111,8 +125,8 @@ export default () => {
           let statusMessage;
           if (e.name === 'AxiosError') {
             statusMessage = 'networkError';
-          } else if (e.message === newInstance.t('parseError')) {
-            statusMessage = 'noAvailableRSS';
+          } else if (e.message === 'parseError') {
+            statusMessage = 'invalidRss';
           } else {
             statusMessage = e.type;
           }
