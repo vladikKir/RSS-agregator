@@ -49,8 +49,8 @@ const renderPosts = (postsEl, i18nextInstanse, postList) => {
   if (postList.length === 0) {
     return;
   }
-  const posts = renderContainer('posts', i18nextInstanse);
-  const list = posts.querySelector('ul');
+  const view = renderContainer('posts', i18nextInstanse);
+  const list = view.querySelector('ul');
   postList.forEach((el) => {
     const post = document.createElement('li');
     post.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
@@ -73,7 +73,7 @@ const renderPosts = (postsEl, i18nextInstanse, postList) => {
     button.textContent = i18nextInstanse.t('posts.button');
     list.append(post);
   });
-  postsEl.append(posts);
+  postsEl.append(view);
 };
 
 const renderFeeds = (feedsEl, i18nextInstanse, feedList) => {
@@ -81,8 +81,8 @@ const renderFeeds = (feedsEl, i18nextInstanse, feedList) => {
   if (feedList.length === 0) {
     return;
   }
-  const feeds = renderContainer('feeds', i18nextInstanse);
-  const list = feeds.querySelector('ul');
+  const view = renderContainer('feeds', i18nextInstanse);
+  const list = view.querySelector('ul');
   feedList.forEach((el) => {
     const feed = document.createElement('li');
     feed.classList.add('list-group-item', 'border-0', 'border-end-0');
@@ -96,7 +96,7 @@ const renderFeeds = (feedsEl, i18nextInstanse, feedList) => {
     description.textContent = el.description;
     list.append(feed);
   });
-  feedsEl.append(feeds);
+  feedsEl.append(view);
 };
 
 const renderSeenPost = (id) => {
