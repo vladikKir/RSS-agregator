@@ -1,6 +1,7 @@
 import { string } from 'yup';
 import axios from 'axios';
 import i18next from 'i18next';
+import _ from 'lodash';
 import resources from './locales/index.js';
 import watchState from './view.js';
 import parseRss from './parser.js';
@@ -8,16 +9,17 @@ import parseRss from './parser.js';
 export default () => {
   const state = {
     form: {
-      validationStatus: '',
+      validationStatus: true,
       statusMessage: '',
     },
     rss: {
       feeds: [],
       posts: [],
-      seenPosts: [],
+      lastSeenPost: [],
     },
     rssList: [],
     modal: {},
+    inProcess: false,
   };
 
   const elements = {
@@ -40,20 +42,16 @@ export default () => {
       return;
     }
     const targetPostId = targetPost.dataset.id;
-    watchedState.rss.seenPosts.push(targetPostId);
+    watchedState.rss.lastSeenPost = targetPostId;
   };
 
   const modalEventListener = (e) => {
     const button = e.relatedTarget;
     const buttonId = button.dataset.id;
     const currentPost = watchedState.rss.posts.find((post) => post.id === buttonId);
-    const {
-      title, description, link, id,
-    } = currentPost;
-    watchedState.modal = {
-      title, description, link, id,
-    };
-    watchState.rss.seenPosts.push(id);
+    const { id } = currentPost;
+    watchedState.modal = { ...currentPost };
+    watchedState.rss.lastSeenPost = id;
   };
 
   const validateUrl = (url) => {
@@ -61,35 +59,41 @@ export default () => {
     return urlSchema.validate(url);
   };
 
-  const getUpdatedRss = () => {
-    const list = watchedState.rssList;
-    return list.map((rss) => axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(rss)}`)
-      .then((response) => parseRss(response.data.contents)));
+  const makeProxy = (url) => `https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`;
+
+  const addPostsID = (posts) => {
+    if (posts.length === 0) return false;
+
+    return posts.map((post) => {
+      const id = _.uniqueId();
+      return { ...post, id };
+    });
   };
+
+  const getUpdatedRss = () => watchedState.rssList.map((rss) => axios.get(makeProxy(rss))
+    .then((response) => parseRss(response.data.contents)));
 
   const updatePosts = (posts) => {
     const titles = watchedState.rss.posts.map((post) => post.title);
-    const postsToUpdate = [];
-    posts.forEach((post) => {
+    const postsToUpdate = posts.reduce((acc, post) => {
       const { title } = post;
       if (!titles.includes(title)) {
-        postsToUpdate.push(post);
+        return [...acc, post];
       }
-    });
-    watchedState.rss.posts.push(...postsToUpdate);
+      return acc;
+    }, []);
+    const postsWithID = addPostsID(postsToUpdate);
+    watchedState.rss.posts.push(...postsWithID);
   };
 
   const checkForUpdates = () => {
     const promises = getUpdatedRss();
     Promise.allSettled(promises)
       .then((results) => {
-        const fullfiled = results.reduce((acc, result) => {
-          if (result.status === 'fulfilled') {
-            return [...acc, ...result.value.posts];
-          }
-          return acc;
-        }, []);
-        updatePosts(fullfiled);
+        const fullfiledPosts = results
+          .filter((result) => result.status === 'fulfilled')
+          .map((result) => result.value.posts);
+        updatePosts(fullfiledPosts.flat());
       })
       .then(() => {
         setTimeout(checkForUpdates, TIME_STEP);
@@ -110,16 +114,16 @@ export default () => {
       const url = input.value;
       validateUrl(url)
         .then(() => {
-          watchedState.form = { validationStatus: 'checking', statusMessage: 'adding' };
-          return axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`);
+          watchedState.inProcess = true;
+          return axios.get(makeProxy(url));
         })
-        .then((response) => parseRss(response.data.contents, i18nextInstanse
-          .t('parseError')))
-        .then(({ feed, posts }) => {
-          watchedState.form = { validationStatus: 'valid', statusMessage: 'success' };
+        .then((response) => {
+          const { feed, posts } = parseRss(response.data.contents);
+          const postsWithID = addPostsID(posts);
+          watchedState.form = { validationStatus: true, statusMessage: 'success' };
           watchedState.rssList.push(url);
           watchedState.rss.feeds.push(feed);
-          watchedState.rss.posts.push(...posts);
+          watchedState.rss.posts.push(...postsWithID);
         })
         .catch((e) => {
           let statusMessage;
@@ -130,7 +134,10 @@ export default () => {
           } else {
             statusMessage = e.type;
           }
-          watchedState.form = { validationStatus: 'invalid', statusMessage };
+          watchedState.form = { validationStatus: false, statusMessage };
+        })
+        .finally(() => {
+          watchedState.inProcess = false;
         });
     });
   });

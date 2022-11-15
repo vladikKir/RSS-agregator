@@ -1,30 +1,22 @@
 import onChange from 'on-change';
 
-const makeInputStyle = (input, value) => {
-  input.removeAttribute('readonly');
+const renderInputStyle = (input, value) => {
   switch (value) {
-    case 'invalid':
+    case false:
       input.classList.add('is-invalid');
       break;
-    case 'valid':
+    case true:
       input.classList.remove('is-invalid');
       input.value = '';
-      break;
-    case 'checking':
-      input.setAttribute('readonly', 'true');
-      input.classList.remove('is-invalid');
       break;
     default:
       throw new Error(`${value} is an unexpected input status`);
   }
 };
 
-const makeStatusMessageStyle = (statusMessage, i18nextInstanse, value) => {
+const renderStatusMessageStyle = (statusMessage, i18nextInstanse, value) => {
   statusMessage.classList.remove('text-danger');
   switch (value) {
-    case 'adding':
-      statusMessage.textContent = '';
-      break;
     case 'success':
       statusMessage.classList.add('text-success');
       statusMessage.textContent = i18nextInstanse.t(`rssStatusMessage.${value}`);
@@ -36,7 +28,7 @@ const makeStatusMessageStyle = (statusMessage, i18nextInstanse, value) => {
   }
 };
 
-const makeContainer = (type, i18nextInstanse) => {
+const renderContainer = (type, i18nextInstanse) => {
   const container = document.createElement('div');
   container.classList.add('card', 'border-0');
   const cardBody = document.createElement('div');
@@ -52,12 +44,12 @@ const makeContainer = (type, i18nextInstanse) => {
   return container;
 };
 
-const makePosts = (postsEl, i18nextInstanse, postList) => {
+const renderPosts = (postsEl, i18nextInstanse, postList) => {
   postsEl.innerHTML = '';
   if (postList.length === 0) {
     return;
   }
-  const posts = makeContainer('posts', i18nextInstanse);
+  const posts = renderContainer('posts', i18nextInstanse);
   const list = posts.querySelector('ul');
   postList.forEach((el) => {
     const post = document.createElement('li');
@@ -84,12 +76,12 @@ const makePosts = (postsEl, i18nextInstanse, postList) => {
   postsEl.append(posts);
 };
 
-const makeFeeds = (feedsEl, i18nextInstanse, feedList) => {
+const renderFeeds = (feedsEl, i18nextInstanse, feedList) => {
   feedsEl.innerHTML = '';
   if (feedList.length === 0) {
     return;
   }
-  const feeds = makeContainer('feeds', i18nextInstanse);
+  const feeds = renderContainer('feeds', i18nextInstanse);
   const list = feeds.querySelector('ul');
   feedList.forEach((el) => {
     const feed = document.createElement('li');
@@ -107,39 +99,52 @@ const makeFeeds = (feedsEl, i18nextInstanse, feedList) => {
   feedsEl.append(feeds);
 };
 
-const makeSeenPosts = (id) => {
+const renderSeenPost = (id) => {
   const seenPost = document.querySelector(`a[data-id="${id}"]`);
   seenPost.classList.remove('fw-bold');
   seenPost.classList.add('fw-normal', 'link-secondary');
 };
 
-const makeModalWindow = (modalEl, modalState) => {
+const renderModalWindow = (modalEl, modalState) => {
   const title = modalEl.querySelector('.modal-title');
   const body = modalEl.querySelector('.modal-body');
   const readFullArticle = modalEl.querySelector('.full-article');
   title.textContent = modalState.title;
   body.textContent = modalState.description;
   readFullArticle.href = modalState.link;
-  makeSeenPosts(modalState.id);
+  renderSeenPost(modalState.id);
+};
+
+const renderProcessView = (input, statusMessage, value) => {
+  if (value) {
+    input.setAttribute('readonly', 'true');
+    input.classList.remove('is-invalid');
+    statusMessage.textContent = '';
+  } else {
+    input.removeAttribute('readonly');
+  }
 };
 
 export default (state, i18nextInstanse, elements) => onChange(state, (path, value) => {
   switch (path) {
     case 'form':
-      makeInputStyle(elements.input, value.validationStatus);
-      makeStatusMessageStyle(elements.statusMessage, i18nextInstanse, value.statusMessage);
+      renderInputStyle(elements.input, value.validationStatus);
+      renderStatusMessageStyle(elements.statusMessage, i18nextInstanse, value.statusMessage);
       break;
     case 'rss.feeds':
-      makeFeeds(elements.feeds, i18nextInstanse, value);
+      renderFeeds(elements.feeds, i18nextInstanse, value);
       break;
     case 'rss.posts':
-      makePosts(elements.posts, i18nextInstanse, value);
+      renderPosts(elements.posts, i18nextInstanse, value);
       break;
-    case 'rss.seenPosts':
-      makeSeenPosts(value);
+    case 'rss.lastSeenPost':
+      renderSeenPost(value);
       break;
     case 'modal':
-      makeModalWindow(elements.modal, value);
+      renderModalWindow(elements.modal, value);
+      break;
+    case 'inProcess':
+      renderProcessView(elements.input, elements.statusMessage, value);
       break;
     default:
       break;
