@@ -1,34 +1,28 @@
 import onChange from 'on-change';
 
-const renderInputStyle = (input, value) => {
-  switch (value) {
-    case false:
-      input.classList.add('is-invalid');
-      break;
-    case true:
-      input.classList.remove('is-invalid');
-      input.value = '';
-      break;
-    default:
-      throw new Error(`${value} is an unexpected input status`);
-  }
+const renderProcessForm = (input, statusMessage) => {
+  input.setAttribute('readonly', 'true');
+  input.classList.remove('is-invalid');
+  statusMessage.textContent = '';
 };
 
-const renderStatusMessageStyle = (statusMessage, i18nextInstanse, value) => {
+const renderSuccessForm = (input, statusMessage, i18nextInstance) => {
+  input.classList.remove('is-invalid');
+  input.value = '';
   statusMessage.classList.remove('text-danger');
-  switch (value) {
-    case 'success':
-      statusMessage.classList.add('text-success');
-      statusMessage.textContent = i18nextInstanse.t(`rssStatusMessage.${value}`);
-      break;
-    default:
-      statusMessage.classList.add('text-danger');
-      statusMessage.textContent = i18nextInstanse.t(`rssStatusMessage.${value}`);
-      break;
-  }
+  statusMessage.classList.add('text-success');
+  statusMessage.textContent = i18nextInstance.t('rssStatusMessage.success');
+  input.removeAttribute('readonly');
 };
 
-const renderContainer = (type, i18nextInstanse) => {
+const renderErrorForm = (input, statusMessage, i18nextInstance, error) => {
+  input.classList.add('is-invalid');
+  statusMessage.classList.add('text-danger');
+  statusMessage.textContent = i18nextInstance.t(`rssStatusMessage.${error}`);
+  input.removeAttribute('readonly');
+};
+
+const renderContainer = (type, i18nextInstance) => {
   const container = document.createElement('div');
   container.classList.add('card', 'border-0');
   const cardBody = document.createElement('div');
@@ -37,19 +31,19 @@ const renderContainer = (type, i18nextInstanse) => {
   const header = document.createElement('h2');
   cardBody.append(header);
   header.classList.add('card-title', 'h4');
-  header.textContent = type === 'feeds' ? i18nextInstanse.t('feeds.title') : i18nextInstanse.t('posts.title');
+  header.textContent = type === 'feeds' ? i18nextInstance.t('feeds.title') : i18nextInstance.t('posts.title');
   const list = document.createElement('ul');
   cardBody.append(list);
   list.classList.add('list-group', 'border-0', 'rounded-0');
   return container;
 };
 
-const renderPosts = (postsEl, i18nextInstanse, postList) => {
+const renderPosts = (postsEl, i18nextInstance, postList) => {
   postsEl.innerHTML = '';
   if (postList.length === 0) {
     return;
   }
-  const view = renderContainer('posts', i18nextInstanse);
+  const view = renderContainer('posts', i18nextInstance);
   const list = view.querySelector('ul');
   postList.forEach((el) => {
     const post = document.createElement('li');
@@ -70,18 +64,18 @@ const renderPosts = (postsEl, i18nextInstanse, postList) => {
     button.setAttribute('data-id', el.id);
     button.setAttribute('data-bs-toggle', 'modal');
     button.setAttribute('data-bs-target', '#modal');
-    button.textContent = i18nextInstanse.t('posts.button');
+    button.textContent = i18nextInstance.t('posts.button');
     list.append(post);
   });
   postsEl.append(view);
 };
 
-const renderFeeds = (feedsEl, i18nextInstanse, feedList) => {
+const renderFeeds = (feedsEl, i18nextInstance, feedList) => {
   feedsEl.innerHTML = '';
   if (feedList.length === 0) {
     return;
   }
-  const view = renderContainer('feeds', i18nextInstanse);
+  const view = renderContainer('feeds', i18nextInstance);
   const list = view.querySelector('ul');
   feedList.forEach((el) => {
     const feed = document.createElement('li');
@@ -99,10 +93,12 @@ const renderFeeds = (feedsEl, i18nextInstanse, feedList) => {
   feedsEl.append(view);
 };
 
-const renderSeenPost = (id) => {
-  const seenPost = document.querySelector(`a[data-id="${id}"]`);
-  seenPost.classList.remove('fw-bold');
-  seenPost.classList.add('fw-normal', 'link-secondary');
+const renderSeenPosts = (IDs) => {
+  IDs.forEach((id) => {
+    const seenPost = document.querySelector(`a[data-id="${id}"]`);
+    seenPost.classList.remove('fw-bold');
+    seenPost.classList.add('fw-normal', 'link-secondary');
+  });
 };
 
 const renderModalWindow = (modalEl, modalState) => {
@@ -112,39 +108,37 @@ const renderModalWindow = (modalEl, modalState) => {
   title.textContent = modalState.title;
   body.textContent = modalState.description;
   readFullArticle.href = modalState.link;
-  renderSeenPost(modalState.id);
 };
 
-const renderProcessView = (input, statusMessage, value) => {
-  if (value) {
-    input.setAttribute('readonly', 'true');
-    input.classList.remove('is-invalid');
-    statusMessage.textContent = '';
-  } else {
-    input.removeAttribute('readonly');
-  }
-};
-
-export default (state, i18nextInstanse, elements) => onChange(state, (path, value) => {
+export default (state, i18nextInstance, elements) => onChange(state, (path, value) => {
   switch (path) {
-    case 'form':
-      renderInputStyle(elements.input, value.validationStatus);
-      renderStatusMessageStyle(elements.statusMessage, i18nextInstanse, value.statusMessage);
+    case 'formStatus':
+      switch (value) {
+        case 'success':
+          renderSuccessForm(elements.input, elements.statusMessage, i18nextInstance);
+          break;
+        case 'inProcess':
+          renderProcessForm(elements.input, elements.statusMessage);
+          break;
+        case 'error':
+          renderErrorForm(elements.input, elements.statusMessage, i18nextInstance, state.error);
+          break;
+        default:
+          throw new Error('Unexpected form status');
+      }
       break;
     case 'rss.feeds':
-      renderFeeds(elements.feeds, i18nextInstanse, value);
+      renderFeeds(elements.feeds, i18nextInstance, value);
       break;
     case 'rss.posts':
-      renderPosts(elements.posts, i18nextInstanse, value);
+      renderPosts(elements.posts, i18nextInstance, value);
+      renderSeenPosts(state.rss.seenPosts);
       break;
-    case 'rss.lastSeenPost':
-      renderSeenPost(value);
+    case 'rss.seenPosts':
+      renderSeenPosts(value);
       break;
     case 'modal':
       renderModalWindow(elements.modal, value);
-      break;
-    case 'inProcess':
-      renderProcessView(elements.input, elements.statusMessage, value);
       break;
     default:
       break;

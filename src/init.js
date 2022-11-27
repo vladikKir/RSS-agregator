@@ -8,18 +8,14 @@ import parseRss from './parser.js';
 
 export default () => {
   const state = {
-    form: {
-      validationStatus: true,
-      statusMessage: '',
-    },
+    formStatus: '',
     rss: {
       feeds: [],
       posts: [],
-      lastSeenPost: [],
+      seenPosts: [],
     },
-    rssList: [],
+    error: '',
     modal: {},
-    inProcess: false,
   };
 
   const elements = {
@@ -42,7 +38,9 @@ export default () => {
       return;
     }
     const targetPostId = targetPost.dataset.id;
-    watchedState.rss.lastSeenPost = targetPostId;
+    if (!watchedState.rss.seenPosts.includes(targetPostId)) {
+      watchedState.rss.seenPosts.push(targetPostId);
+    }
   };
 
   const modalEventListener = (e) => {
@@ -50,38 +48,37 @@ export default () => {
     const buttonId = button.dataset.id;
     const currentPost = watchedState.rss.posts.find((post) => post.id === buttonId);
     const { id } = currentPost;
+    if (!watchedState.rss.seenPosts.includes(id)) {
+      watchedState.rss.seenPosts.push(id);
+    }
     watchedState.modal = { ...currentPost };
-    watchedState.rss.lastSeenPost = id;
   };
 
   const validateUrl = (url) => {
-    const urlSchema = string().url().notOneOf(watchedState.rssList);
+    const rssList = watchedState.rss.feeds.map((feed) => feed.url);
+    const urlSchema = string().url().notOneOf(rssList);
     return urlSchema.validate(url);
   };
 
   const makeProxy = (url) => `https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`;
 
   const addPostsID = (posts) => {
-    if (posts.length === 0) return false;
-
+    if (posts.length === 0) return [];
     return posts.map((post) => {
       const id = _.uniqueId();
       return { ...post, id };
     });
   };
 
-  const getUpdatedRss = () => watchedState.rssList.map((rss) => axios.get(makeProxy(rss))
-    .then((response) => parseRss(response.data.contents)));
+  const getUpdatedRss = () => {
+    const rssList = watchedState.rss.feeds.map((feed) => feed.url);
+    return rssList.map((rss) => axios.get(makeProxy(rss))
+      .then((response) => parseRss(response.data.contents)));
+  };
 
   const updatePosts = (posts) => {
     const titles = watchedState.rss.posts.map((post) => post.title);
-    const postsToUpdate = posts.reduce((acc, post) => {
-      const { title } = post;
-      if (!titles.includes(title)) {
-        return [...acc, post];
-      }
-      return acc;
-    }, []);
+    const postsToUpdate = posts.filter((post) => !titles.includes(post.title));
     const postsWithID = addPostsID(postsToUpdate);
     watchedState.rss.posts.push(...postsWithID);
   };
@@ -95,7 +92,7 @@ export default () => {
           .map((result) => result.value.posts);
         updatePosts(fullfiledPosts.flat());
       })
-      .then(() => {
+      .finally(() => {
         setTimeout(checkForUpdates, TIME_STEP);
       });
   };
@@ -114,30 +111,28 @@ export default () => {
       const url = input.value;
       validateUrl(url)
         .then(() => {
-          watchedState.inProcess = true;
+          watchedState.formStatus = 'inProcess';
           return axios.get(makeProxy(url));
         })
         .then((response) => {
           const { feed, posts } = parseRss(response.data.contents);
+          feed.url = url;
           const postsWithID = addPostsID(posts);
-          watchedState.form = { validationStatus: true, statusMessage: 'success' };
-          watchedState.rssList.push(url);
+          watchedState.formStatus = 'success';
           watchedState.rss.feeds.push(feed);
           watchedState.rss.posts.push(...postsWithID);
         })
         .catch((e) => {
-          let statusMessage;
+          let errorMessage;
           if (e.name === 'AxiosError') {
-            statusMessage = 'networkError';
+            errorMessage = 'networkError';
           } else if (e.message === 'parseError') {
-            statusMessage = 'invalidRss';
+            errorMessage = 'invalidRss';
           } else {
-            statusMessage = e.type;
+            errorMessage = e.type;
           }
-          watchedState.form = { validationStatus: false, statusMessage };
-        })
-        .finally(() => {
-          watchedState.inProcess = false;
+          watchedState.error = errorMessage;
+          watchedState.formStatus = 'error';
         });
     });
   });
