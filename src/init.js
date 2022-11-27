@@ -8,13 +8,13 @@ import parseRss from './parser.js';
 
 export default () => {
   const state = {
-    formStatus: '',
+    formStatus: 'ready',
     rss: {
       feeds: [],
       posts: [],
       seenPosts: [],
     },
-    error: '',
+    error: null,
     modal: {},
   };
 
